@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ChairCheck - Real-Time Seat Availability</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eae6fa;
+      min-height: 100vh;
+    }
+    .background-img {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -1;
+      object-fit: cover;
+      opacity: 0.18;
+    }
+    .navbar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 1.5rem 3rem 0.5rem 3rem;
+      background: transparent;
+      font-size: 1.1rem;
+    }
+    .navbar a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 2rem;
+      font-weight: 500;
+      font-family: 'Segoe Script', cursive;
+      transition: color 0.2s;
+    }
+    .navbar a:hover {
+      color: #6c63ff;
+    }
+    .header-content {
+      text-align: left;
+      margin: 2rem 0 1.5rem 3rem;
+      color: #222;
+    }
+    .header-content h1 {
+      font-family: 'Lobster', cursive, sans-serif;
+      font-size: 3rem;
+      margin: 0;
+      color: #111;
+      letter-spacing: 2px;
+    }
+    .header-content p {
+      font-size: 1.2rem;
+      margin-top: 0.5rem;
+      color: #444;
+    }
+    .main-upper {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin: 0 3rem 2rem 3rem;
+      gap: 2rem;
+    }
+    .panel {
+      background: #f4f4f8;
+      border-radius: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: 1.5rem 2rem;
+      min-width: 320px;
+      flex: 1;
+    }
+    .panel h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: #6c63ff;
+    }
+    .locations-list {
+      display: flex;
+      gap: 1.2rem;
+    }
+    .location-btn {
+      background: #fff;
+      border: 2px solid #6c63ff;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-weight: 500;
+    }
+    .location-btn.selected, .location-btn:hover {
+      background: #6c63ff;
+      color: #fff;
+    }
+    .quick-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.7rem;
+    }
+    .stat-row {
+      font-size: 1.1rem;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .stat-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .stat-dot.free { background: #28a745; }
+    .stat-dot.occupied { background: #dc3545; }
+    .main-lower {
+      background: #b3aaff;
+      border-radius: 30px 30px 0 0;
+      margin: 0;
+      padding: 2.5rem 3rem 3rem 3rem;
+      min-height: 45vh;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+    }
+    .map-header {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      letter-spacing: 2px;
+    }
+    #seat-map {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .seat-row {
+      display: flex;
+      gap: 1.2rem;
+    }
+    .seat {
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      background: #fff;
+      border: 2px solid #6c63ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6c63ff;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      margin: 0.2rem;
+    }
+    .seat.occupied {
+      background: #dc3545;
+      color: #fff;
+      border-color: #dc3545;
+      cursor: not-allowed;
+    }
+    .seat.free {
+      background: #28a745;
+      color: #fff;
+      border-color: #28a745;
+    }
+    @media (max-width: 900px) {
+      .main-upper { flex-direction: column; gap: 1.5rem; }
+      .main-lower { padding: 2rem 1rem; }
+      .header-content { margin-left: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <img src="background.jpg" alt="Background" class="background-img">
+  <nav class="navbar">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Links</a>
+  </nav>
+  <div class="header-content">
+    <h1>ChairCheck</h1>
+    <p>Real-Time Seat Availability Tracking System</p>
+  </div>
+  <div class="main-upper">
+    <section class="panel" id="locations-panel">
+      <h2>Locations</h2>
+      <div class="locations-list">
+        <button class="location-btn selected" data-location="canteen1">Canteen 1</button>
+        <button class="location-btn" data-location="canteen2">Canteen 2</button>
+        <button class="location-btn" data-location="library">Library</button>
+      </div>
+    </section>
+    <section class="panel" id="stats-panel">
+      <h2>Quick Stats</h2>
+      <div class="quick-stats">
+        <div class="stat-row"><span class="stat-dot free"></span> Free: <span id="stat-free">0</span></div>
+        <div class="stat-row"><span class="stat-dot occupied"></span> Occupied: <span id="stat-occupied">0</span></div>
+      </div>
+    </section>
+  </div>
+  <div class="main-lower">
+    <div class="map-header" id="map-title">Canteen 1</div>
+    <div id="seat-map">
+      <!-- Seat map will be rendered here by JS -->
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
